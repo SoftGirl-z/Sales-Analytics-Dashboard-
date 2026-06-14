@@ -26,4 +26,5 @@ across product categories and geographic regions.
 3. Refresh data or connect your own source
 
 ## Preview
-![Dashboard Preview](preview.png)
+<img width="711" height="676" alt="image" src="https://github.com/user-attachments/assets/1ba679c2-bd9d-4b47-b9d7-3797a21ee0a1" />
+
