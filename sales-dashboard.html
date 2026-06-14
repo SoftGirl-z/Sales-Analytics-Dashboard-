@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Analytics Dashboard — Power BI Portfolio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #fff; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    background: #111827;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .pbi-logo { display: flex; align-items: center; gap: 8px; }
+  .pbi-title { color: #f9b233; font-size: 16px; font-weight: 600; }
+  .report-name { color: rgba(255,255,255,0.4); font-size: 13px; }
+  .topbar-tabs { display: flex; gap: 4px; }
+  .tab { padding: 6px 14px; font-size: 12px; border-radius: 4px; cursor: pointer; color: rgba(255,255,255,0.45); border: none; background: none; }
+  .tab.active { background: rgba(249,178,51,0.15); color: #f9b233; font-weight: 600; }
+  .btn-share { background: #f9b233; color: #111; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 5px; border: none; cursor: pointer; }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 8px; align-items: center; padding: 14px 24px; flex-wrap: wrap; }
+  .filter-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+  .chip { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 14px; font-size: 11px; color: rgba(255,255,255,0.45); cursor: pointer; font-family: inherit; }
+  .chip.active { background: rgba(249,178,51,0.15); border-color: rgba(249,178,51,0.4); color: #f9b233; }
+  .update-info { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.25); }
+
+  /* CONTENT */
+  .content { padding: 0 24px 32px; }
+
+  /* KPI CARDS */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi {
+    background: #111827;
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 0.5px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; }
+  .kpi-gold::before { background: #f9b233; }
+  .kpi-blue::before  { background: #4f8ef7; }
+  .kpi-green::before { background: #22c997; }
+  .kpi-red::before   { background: #e25c5c; }
+  .kpi-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 7px; }
+  .kpi-value { font-size: 28px; font-weight: 600; color: #fff; line-height: 1; }
+  .kpi-sub { font-size: 11px; margin-top: 6px; }
+  .up   { color: #22c997; }
+  .down { color: #e25c5c; }
+
+  /* CHART CARDS */
+  .charts-row  { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .charts-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card {
+    background: #111827;
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 0.5px solid rgba(255,255,255,0.08);
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .legend { display: flex; gap: 12px; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(255,255,255,0.4); }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; gap: 8px; align-items: flex-end; height: 150px; }
+  .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+  .bar-group { display: flex; gap: 3px; align-items: flex-end; width: 100%; height: 130px; }
+  .bar { border-radius: 3px 3px 0 0; flex: 1; transition: opacity .2s; }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { font-size: 9px; color: rgba(255,255,255,0.3); }
+  .divider { width: 1px; background: rgba(255,255,255,0.07); align-self: stretch; margin: 0 2px; }
+
+  /* DONUT */
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .dleg-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+  .dleg-item:last-child { border: none; }
+  .dleg-left { display: flex; align-items: center; gap: 7px; font-size: 11px; color: rgba(255,255,255,0.55); }
+  .dleg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .dleg-val { font-size: 11px; font-weight: 600; color: #fff; }
+
+  /* LINE CHART */
+  .line-wrap { height: 100px; }
+  .line-wrap svg { width: 100%; height: 100%; }
+  .axis-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .axis-label { font-size: 9px; color: rgba(255,255,255,0.25); }
+
+  /* REGION BARS */
+  .region-row { margin-bottom: 10px; }
+  .region-header { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.55); margin-bottom: 5px; }
+  .region-header span:last-child { color: #fff; font-weight: 600; }
+  .region-track { background: rgba(255,255,255,0.07); border-radius: 3px; height: 6px; }
+  .region-fill { height: 100%; border-radius: 3px; }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 20px; font-size: 11px; color: rgba(255,255,255,0.2); border-top: 0.5px solid rgba(255,255,255,0.06); margin-top: 8px; }
+  .footer a { color: rgba(249,178,51,0.6); text-decoration: none; }
+  .footer a:hover { color: #f9b233; }
+
+  @media (max-width: 700px) {
+    .kpi-row   { grid-template-columns: 1fr 1fr; }
+    .charts-row, .charts-row2 { grid-template-columns: 1fr; }
+    .topbar-tabs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="pbi-logo">
+      <svg width="26" height="26" viewBox="0 0 28 28">
+        <rect x="2"  y="14" width="6" height="12" rx="1" fill="#f9b233"/>
+        <rect x="11" y="8"  width="6" height="18" rx="1" fill="#f9b233" opacity=".75"/>
+        <rect x="20" y="2"  width="6" height="24" rx="1" fill="#f9b233" opacity=".5"/>
+      </svg>
+      <span class="pbi-title">Power BI</span>
+    </div>
+    <span class="report-name">Sales Analytics Dashboard</span>
+  </div>
+  <div class="topbar-tabs">
+    <button class="tab active">Overview</button>
+    <button class="tab">Products</button>
+    <button class="tab">Regions</button>
+    <button class="tab">Customers</button>
+  </div>
+  <button class="btn-share">Share ↗</button>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Period:</span>
+  <button class="chip active">2024 Q4</button>
+  <button class="chip">Q3</button>
+  <button class="chip">Q2</button>
+  <button class="chip">Full Year</button>
+  <span class="update-info">Last updated: Dec 31, 2024</span>
+</div>
+
+<div class="content">
+
+  <!-- KPI CARDS -->
+  <div class="kpi-row">
+    <div class="kpi kpi-gold">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value">$4.82M</div>
+      <div class="kpi-sub up">▲ 18.4% vs Q3</div>
+    </div>
+    <div class="kpi kpi-blue">
+      <div class="kpi-label">Orders</div>
+      <div class="kpi-value">12,340</div>
+      <div class="kpi-sub up">▲ 9.1% vs Q3</div>
+    </div>
+    <div class="kpi kpi-green">
+      <div class="kpi-label">Gross Margin</div>
+      <div class="kpi-value">61.3%</div>
+      <div class="kpi-sub up">▲ 2.8 pts</div>
+    </div>
+    <div class="kpi kpi-red">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-value">3.7%</div>
+      <div class="kpi-sub down">▼ 0.5 pts vs Q3</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: BAR + DONUT -->
+  <div class="charts-row">
+
+    <div class="card">
+      <div class="card-title">
+        Monthly Revenue &amp; Target
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#f9b233"></span>Revenue</span>
+          <span class="leg"><span class="leg-dot" style="background:rgba(255,255,255,0.2);border:1px dashed rgba(255,255,255,0.4)"></span>Target</span>
+        </div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-wrap">
+          <div class="bar-group">
+            <div class="bar" style="height:72%;background:#f9b233;"></div>
+            <div class="bar" style="height:78%;background:rgba(255,255,255,0.1);border:0.5px dashed rgba(255,255,255,0.25);"></div>
+          </div>
+          <span class="bar-label">Oct</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-group">
+            <div class="bar" style="height:85%;background:#f9b233;"></div>
+            <div class="bar" style="height:80%;background:rgba(255,255,255,0.1);border:0.5px dashed rgba(255,255,255,0.25);"></div>
+          </div>
+          <span class="bar-label">Nov</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-group">
+            <div class="bar" style="height:100%;background:#f9b233;"></div>
+            <div class="bar" style="height:85%;background:rgba(255,255,255,0.1);border:0.5px dashed rgba(255,255,255,0.25);"></div>
+          </div>
+          <span class="bar-label">Dec</span>
+        </div>
+        <div class="divider"></div>
+        <div class="bar-wrap">
+          <div class="bar-group"><div class="bar" style="height:60%;background:#4f8ef7;"></div></div>
+          <span class="bar-label">Electronics</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-group"><div class="bar" style="height:45%;background:#22c997;"></div></div>
+          <span class="bar-label">Apparel</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-group"><div class="bar" style="height:32%;background:#a78bfa;"></div></div>
+          <span class="bar-label">Home</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-group"><div class="bar" style="height:22%;background:#f87171;"></div></div>
+          <span class="bar-label">Sports</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revenue by Category</div>
+      <div class="donut-wrap">
+        <svg viewBox="0 0 110 110" width="100" height="100">
+          <circle cx="55" cy="55" r="40" fill="none" stroke="#1a2035" stroke-width="22"/>
+          <circle cx="55" cy="55" r="40" fill="none" stroke="#4f8ef7" stroke-width="22"
+            stroke-dasharray="88 163" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
+          <circle cx="55" cy="55" r="40" fill="none" stroke="#22c997" stroke-width="22"
+            stroke-dasharray="67 163" stroke-dashoffset="-88" transform="rotate(-90 55 55)"/>
+          <circle cx="55" cy="55" r="40" fill="none" stroke="#a78bfa" stroke-width="22"
+            stroke-dasharray="51 163" stroke-dashoffset="-155" transform="rotate(-90 55 55)"/>
+          <circle cx="55" cy="55" r="40" fill="none" stroke="#f87171" stroke-width="22"
+            stroke-dasharray="43 163" stroke-dashoffset="-206" transform="rotate(-90 55 55)"/>
+          <text x="55" y="52" text-anchor="middle" fill="white" font-size="13" font-weight="600" font-family="Segoe UI,sans-serif">61.3%</text>
+          <text x="55" y="64" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="7.5" font-family="Segoe UI,sans-serif">margin</text>
+        </svg>
+        <div style="width:100%">
+          <div class="dleg-item"><div class="dleg-left"><div class="dleg-dot" style="background:#4f8ef7"></div>Electronics</div><div class="dleg-val">35%</div></div>
+          <div class="dleg-item"><div class="dleg-left"><div class="dleg-dot" style="background:#22c997"></div>Apparel</div><div class="dleg-val">26%</div></div>
+          <div class="dleg-item"><div class="dleg-left"><div class="dleg-dot" style="background:#a78bfa"></div>Home</div><div class="dleg-val">20%</div></div>
+          <div class="dleg-item"><div class="dleg-left"><div class="dleg-dot" style="background:#f87171"></div>Sports</div><div class="dleg-val">19%</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: LINE + REGIONS -->
+  <div class="charts-row2">
+
+    <div class="card">
+      <div class="card-title">Customer Growth Trend (12 months)</div>
+      <div class="line-wrap">
+        <svg viewBox="0 0 300 90" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#f9b233" stop-opacity=".3"/>
+              <stop offset="100%" stop-color="#f9b233" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <line x1="0" y1="45" x2="300" y2="45" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <line x1="0" y1="70" x2="300" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          <path d="M0,72 C25,67 45,57 70,52 C95,47 115,36 140,30 C165,24 185,27 210,20 C235,13 260,9 300,4"
+            stroke="#f9b233" stroke-width="2" fill="none"/>
+          <path d="M0,72 C25,67 45,57 70,52 C95,47 115,36 140,30 C165,24 185,27 210,20 C235,13 260,9 300,4 L300,90 L0,90 Z"
+            fill="url(#lg)"/>
+          <circle cx="300" cy="4" r="3" fill="#f9b233"/>
+        </svg>
+      </div>
+      <div class="axis-labels">
+        <span class="axis-label">Jan 2024</span>
+        <span class="axis-label">Dec 2024</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revenue by Region</div>
+      <div class="region-row">
+        <div class="region-header"><span>North America</span><span>$1.94M</span></div>
+        <div class="region-track"><div class="region-fill" style="width:78%;background:#4f8ef7;"></div></div>
+      </div>
+      <div class="region-row">
+        <div class="region-header"><span>Europe</span><span>$1.41M</span></div>
+        <div class="region-track"><div class="region-fill" style="width:58%;background:#22c997;"></div></div>
+      </div>
+      <div class="region-row">
+        <div class="region-header"><span>Asia Pacific</span><span>$0.97M</span></div>
+        <div class="region-track"><div class="region-fill" style="width:40%;background:#a78bfa;"></div></div>
+      </div>
+      <div class="region-row">
+        <div class="region-header"><span>Middle East &amp; Africa</span><span>$0.50M</span></div>
+        <div class="region-track"><div class="region-fill" style="width:20%;background:#f9b233;"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  Power BI Portfolio Project &nbsp;·&nbsp;
+  <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+  &nbsp;·&nbsp;
+  <a href="https://linkedin.com/in/yourprofile" target="_blank">LinkedIn</a>
+</div>
+
+</body>
+</html>
